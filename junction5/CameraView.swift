@@ -46,18 +46,18 @@ struct CameraView: View {
 
         isUploading = true
 
-        APIService.shared.uploadInventoryItem(image: image, x: coordinate.x, y: coordinate.y, z: coordinate.z) { success in
-            DispatchQueue.main.async {
-                self.isUploading = false
-                if success {
-                    print("API call successful.")
-                } else {
-                    print("API call failed.")
-                }
-                // Dismiss the view and return to the 3D model
-                self.presentationMode.wrappedValue.dismiss()
-            }
-        }
+//        APIService.shared.uploadInventoryItem(image: image, x: coordinate.x, y: coordinate.y, z: coordinate.z) { success in
+//            DispatchQueue.main.async {
+//                self.isUploading = false
+//                if success {
+//                    print("API call successful.")
+//                } else {
+//                    print("API call failed.")
+//                }
+//                // Dismiss the view and return to the 3D model
+//                self.presentationMode.wrappedValue.dismiss()
+//            }
+//        }
     }
 
 }

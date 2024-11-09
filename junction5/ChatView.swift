@@ -86,72 +86,152 @@ class ChatViewModel: ObservableObject {
     
     
     // Method to start recording audio
-        func startRecording() {
-            let audioSession = AVAudioSession.sharedInstance()
+    func startRecording() {
+        let audioSession = AVAudioSession.sharedInstance()
+        
+        do {
+            try audioSession.setCategory(.playAndRecord, mode: .default)
+            try audioSession.setActive(true)
             
-            do {
-                try audioSession.setCategory(.playAndRecord, mode: .default)
-                try audioSession.setActive(true)
-                
-                // Set the audio file path
-                let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                audioFilename = documentsDirectory.appendingPathComponent("recording.m4a")
-                
-                // Recording settings
-                let settings = [
-                    AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-                    AVSampleRateKey: 12000,
-                    AVNumberOfChannelsKey: 1,
-                    AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-                ]
-                
-                audioRecorder = try AVAudioRecorder(url: audioFilename!, settings: settings)
-                audioRecorder?.prepareToRecord()
-                audioRecorder?.record()
-                
-                isRecording = true
-                print("Recording started")
-            } catch {
-                print("Failed to set up audio session or start recording: \(error)")
-                isRecording = false
-            }
+            // Set the audio file path
+            let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            audioFilename = documentsDirectory.appendingPathComponent("recording.m4a")
+            
+            // Recording settings
+            let settings = [
+                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                AVSampleRateKey: 12000,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            ]
+            
+            audioRecorder = try AVAudioRecorder(url: audioFilename!, settings: settings)
+            audioRecorder?.prepareToRecord()
+            audioRecorder?.record()
+            
+            isRecording = true
+            print("Recording started")
+        } catch {
+            print("Failed to set up audio session or start recording: \(error)")
+            isRecording = false
+        }
+    }
+    
+    // Method to stop recording audio and upload it
+    func stopRecording() {
+        audioRecorder?.stop()
+        isRecording = false
+        
+        guard let audioURL = audioFilename, let id = inventoryItemId else {
+            print("No audio file or inventory item ID available")
+            return
         }
         
-        // Method to stop recording audio and upload it
-        func stopRecording() {
-            audioRecorder?.stop()
-            isRecording = false
-            
-            guard let audioURL = audioFilename, let id = inventoryItemId else {
-                print("No audio file or inventory item ID available")
-                return
+        // Display a message indicating the audio is being sent
+        messages.append(ChatMessage(text: "Sending audio...", isUser: true))
+        
+        // Use APIService to upload the audio file
+        APIService.shared.uploadAudioFile(inventoryID: id, audioURL: audioURL) { [weak self] responseMessage in
+            DispatchQueue.main.async {
+                // Remove the "Sending audio..." message
+                self?.messages.removeLast()
+                
+                if let responseText = responseMessage {
+                    self?.messages.append(ChatMessage(text: "Audio message sent", isUser: true))
+                    // Display the API's response message in the chat
+                    self?.messages.append(ChatMessage(text: responseText, isUser: false))
+                } else {
+                    // If no message is returned, display an error message
+                    self?.messages.append(ChatMessage(text: "Failed to send audio message", isUser: false))
+                }
             }
-            
-            // Display a message indicating the audio is being sent
-            messages.append(ChatMessage(text: "Sending audio...", isUser: true))
-            
-            // Use APIService to upload the audio file
-            APIService.shared.uploadAudioFile(inventoryID: id, audioURL: audioURL) { [weak self] responseMessage in
+        }
+    }
+    
+    func handleImageCapture(_ image: UIImage) {
+        // Display a message indicating the audio is being sent
+        messages.append(ChatMessage(text: "Image sent", isUser: true))
+        // Display a message indicating the audio is being sent
+        messages.append(ChatMessage(text: "Processing image...", isUser: false))
+        
+        if let id = inventoryItemId {
+            // Update existing inventory item
+            APIService.shared.updateInventoryItem(inventoryID: id, image: image, x: 0.0, y: 0.0, z: 0.0) { [weak self] responseMessage in
                 DispatchQueue.main.async {
-                    // Remove the "Sending audio..." message
                     self?.messages.removeLast()
                     
-                    if let responseText = responseMessage {
-                        self?.messages.append(ChatMessage(text: "Audio message sent", isUser: true))
-                        // Display the API's response message in the chat
-                        self?.messages.append(ChatMessage(text: responseText, isUser: false))
+                    if let message = responseMessage {
+                        self?.messages.append(ChatMessage(text: message, isUser: false))
                     } else {
-                        // If no message is returned, display an error message
-                        self?.messages.append(ChatMessage(text: "Failed to send audio message", isUser: false))
+                        self?.messages.append(ChatMessage(text: "Failed to update inventory item.", isUser: false))
+                    }
+                }
+            }
+        } else {
+            // Create new inventory item
+            APIService.shared.uploadInventoryItem(image: image, x: 0.0, y: 0.0, z: 0.0) { [weak self] responseMessage, newInventoryID in
+                DispatchQueue.main.async {
+                    self?.messages.removeLast()
+                    
+                    if let message = responseMessage {
+                        self?.messages.append(ChatMessage(text: message, isUser: false))
+                        // Store the inventory item ID for future updates
+                        if let id = newInventoryID {
+                            self?.inventoryItemId = id
+                        }
+                    } else {
+                        self?.messages.append(ChatMessage(text: "Failed to create inventory item.", isUser: false))
                     }
                 }
             }
         }
+    }
+    
+//    func handleImageCapture(_ image: UIImage) {
+//        // Display a message indicating the audio is being sent
+//        messages.append(ChatMessage(text: "Image sent", isUser: true))
+//        // Display a message indicating the audio is being sent
+//        messages.append(ChatMessage(text: "Processing image...", isUser: false))
+//        
+//        if let id = inventoryItemId {
+//            // Update existing inventory item
+//            APIService.shared.updateInventoryItem(inventoryID: id, image: image, x: 0.0, y: 0.0, z: 0.0) { [weak self] success in
+//                DispatchQueue.main.async {
+//                    self?.messages.removeLast()
+//                    
+//                    if success {
+//                        self?.messages.append(ChatMessage(text: "Inventory item updated successfully.", isUser: false))
+//                    } else {
+//                        self?.messages.append(ChatMessage(text: "Failed to update inventory item.", isUser: false))
+//                    }
+//                }
+//            }
+//        } else {
+//            // Create new inventory item
+//            APIService.shared.uploadInventoryItem(image: image, x: 0.0, y: 0.0, z: 0.0) { [weak self] success in
+//                DispatchQueue.main.async {
+//                    self?.messages.removeLast()
+//                    
+//                    if success {
+//                        self?.messages.append(ChatMessage(text: "Inventory item created successfully.", isUser: false))
+//                        // Optionally, store the inventory ID if returned from the API
+//                        // self?.inventoryItemId = <receivedInventoryID>
+//                    } else {
+//                        self?.messages.append(ChatMessage(text: "Failed to create inventory item.", isUser: false))
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 struct ChatView: View {
     @State private var messageText: String = ""
     @StateObject private var viewModel = ChatViewModel()
+    
+    // State for camera
+    @State private var showImagePicker = false
+    @State private var selectedImage: UIImage?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -232,11 +312,14 @@ struct ChatView: View {
             HStack(spacing: 12) {
                 // Camera Icon
                 Button(action: {
-                    // Camera action
+                    showImagePicker = true // Open the camera
                 }) {
                     Image(systemName: "camera")
                         .font(.system(size: 24))
                         .foregroundColor(.blue)
+                }
+                .sheet(isPresented: $showImagePicker) {
+                    CameraImagePicker(sourceType: .camera, selectedImage: $selectedImage, onDismiss: handleImageSelection)
                 }
                 
                 Image(systemName: viewModel.isRecording ? "stop.circle.fill" : "mic.circle.fill")
@@ -276,8 +359,12 @@ struct ChatView: View {
             .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: -5)
         }
         .background(Color.white)
-        .edgesIgnoringSafeArea(.bottom).navigationBarBackButtonHidden(true)
-
+        .navigationBarBackButtonHidden(true)
+    }
+    
+    private func handleImageSelection() {
+        guard let image = selectedImage else { return }
+        viewModel.handleImageCapture(image)
     }
 }
 
@@ -293,6 +380,46 @@ struct TextBubble: View {
             .foregroundColor(.black)
             .cornerRadius(15)
             .frame(maxWidth: 250, alignment: isUser ? .trailing : .leading)
+    }
+}
+
+struct CameraImagePicker: UIViewControllerRepresentable {
+    var sourceType: UIImagePickerController.SourceType
+    @Binding var selectedImage: UIImage?
+    var onDismiss: () -> Void
+    
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(self)
+    }
+    
+    func makeUIViewController(context: UIViewControllerRepresentableContext<CameraImagePicker>) -> UIImagePickerController {
+        let imagePicker = UIImagePickerController()
+        imagePicker.delegate = context.coordinator
+        imagePicker.sourceType = sourceType
+        return imagePicker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: UIViewControllerRepresentableContext<CameraImagePicker>) {}
+    
+    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        let parent: CameraImagePicker
+        
+        init(_ parent: CameraImagePicker) {
+            self.parent = parent
+        }
+        
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.selectedImage = image
+            }
+            parent.onDismiss()
+            picker.dismiss(animated: true, completion: nil)
+        }
+        
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.onDismiss()
+            picker.dismiss(animated: true, completion: nil)
+        }
     }
 }
 
