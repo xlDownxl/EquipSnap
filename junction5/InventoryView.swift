@@ -87,5 +87,6 @@ struct InventoryView: View {
             }
         }
         .navigationTitle("Inventory")
+        .navigationBarBackButtonHidden(true)
     }
 }

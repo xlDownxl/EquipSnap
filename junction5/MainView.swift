@@ -13,6 +13,7 @@ struct MainView: View {
                         .cornerRadius(8)
                 }
             }
+            .navigationBarBackButtonHidden(true)
             .navigationTitle("Main View")
         }
     }

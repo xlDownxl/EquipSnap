@@ -149,7 +149,7 @@ struct ModelSceneView: UIViewRepresentable {
             alertController?.addAction(UIAlertAction(title: "Yes", style: .default, handler: { _ in
                 // Dismiss the alert before navigating
                 self.alertController?.dismiss(animated: true, completion: {
-                    self.navigateToCameraView()
+                    self.navigateToChatView()
                 })
             }))
 
@@ -166,9 +166,21 @@ struct ModelSceneView: UIViewRepresentable {
                 }
             }
         }
+        
+        func navigateToChatView() {
+            guard let position = selectedCoordinate else { return }
+            let chatView = ChatView() // Initialize your ChatView
+            let chatViewController = UIHostingController(rootView: chatView) // Wrap ChatView in a UIHostingController
+
+            DispatchQueue.main.async {
+                if let topVC = UIApplication.shared.windows.first?.rootViewController {
+                    topVC.present(chatViewController, animated: true, completion: nil)
+                }
+            }
+        }
 
         
-        func navigateToCameraView() {
+        /*func navigateToCameraView() {
            guard let position = selectedCoordinate else { return }
            guard let sceneView = sceneView else { return }
 
@@ -181,7 +193,7 @@ struct ModelSceneView: UIViewRepresentable {
                    vc.present(cameraVC, animated: true, completion: nil)
                }
            }
-       }
+       }*/
         
         func updateRedDots() {
             guard let sceneView = sceneView else { return }
