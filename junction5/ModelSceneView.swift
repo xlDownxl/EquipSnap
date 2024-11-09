@@ -115,10 +115,7 @@ struct ModelSceneView: UIViewRepresentable {
                 let position = hit.worldCoordinates
                 print("Touched position: \(position)")
                 
-
                 if let tappedItem = parent.inventoryItemsModel.items.first(where: { $0.id == Int(nodeName)}) {
-                    print("ITEM TOUCHED''''")
-                    print(tappedItem.equipment_type)
                     DispatchQueue.main.async {
                         // Set the tapped item to trigger the popup display in SwiftUI
                         self.parent.tappedItem = tappedItem
@@ -149,6 +146,7 @@ struct ModelSceneView: UIViewRepresentable {
             alertController?.addAction(UIAlertAction(title: "Yes", style: .default, handler: { _ in
                 // Dismiss the alert before navigating
                 self.alertController?.dismiss(animated: true, completion: {
+                    self.parent.showPopup = false
                     self.navigateToChatView()
                 })
             }))
