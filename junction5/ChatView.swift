@@ -12,7 +12,7 @@ import Foundation
 import AVFoundation
 
 // Model for a Chat Message
-struct ChatMessage: Identifiable {
+struct ChatMessage: Identifiable, Equatable {
     let id = UUID()
     let text: String
     let isUser: Bool
@@ -329,19 +329,29 @@ struct ChatView: View {
             //                        .padding(.top)
             //                    }
             // Chat messages area
-            ScrollView {
-                VStack(spacing: 10) {
-                    ForEach(viewModel.messages) { message in
-                        HStack {
-                            if message.isUser {
-                                Spacer()
-                                TextBubble(text: message.text, isUser: true)
-                            } else {
-                                TextBubble(text: message.text, isUser: false)
-                                Spacer()
+            // Chat messages area with ScrollViewReader to scroll to bottom
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 10) {
+                        ForEach(viewModel.messages) { message in
+                            HStack {
+                                if message.isUser {
+                                    Spacer()
+                                    TextBubble(text: message.text, isUser: true)
+                                } else {
+                                    TextBubble(text: message.text, isUser: false)
+                                    Spacer()
+                                }
                             }
+                            .padding(.horizontal)
+                            .id(message.id) // Assign an ID to each message
                         }
-                        .padding(.horizontal)
+                    }
+                }
+                .onChange(of: viewModel.messages) { _ in
+                    // Scroll to the latest message when a new message is added
+                    if let lastMessage = viewModel.messages.last {
+                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
                     }
                 }
             }
