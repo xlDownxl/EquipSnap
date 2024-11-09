@@ -42,10 +42,11 @@ struct ModelViewWrapper: View {
                         
                         Text(tappedItem.equipment_type)
                             .font(.headline)
+                            .foregroundColor(.black)
                         Text(tappedItem.condition).padding(.bottom, 14)
                         
                         Text("Serial Number: "+tappedItem.serial_number)
-                            .padding(.bottom, 14)
+                            .padding(.bottom, 14).foregroundColor(.black)
                         
                         NavigationLink(destination: DetailView(item: tappedItem)) {
                             Text("Check details")
