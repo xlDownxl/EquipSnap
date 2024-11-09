@@ -23,36 +23,60 @@ class ChatViewModel: ObservableObject {
     @Published var messageText: String = ""
     
     private var cancellables = Set<AnyCancellable>()
+    private var inventoryItemId: Int? // Stores the ID of the created inventory item
     
     func sendMessage() {
-        // Add user message to chat
-        let userMessage = ChatMessage(text: messageText, isUser: true)
-        messages.append(userMessage)
-        
-        // Add a loading message
-        let loadingMessage = ChatMessage(text: "Sending...", isUser: false)
-        messages.append(loadingMessage)
-        
-        // Send API request
-        APIService.shared.sendTextMessage(text: messageText) { [weak self] response in
-            DispatchQueue.main.async {
-                // Remove loading message
-                self?.messages.removeLast()
-                
-                // Display the API response message in the chat
-                if let responseText = response {
-                    let responseMessage = ChatMessage(text: responseText, isUser: false)
-                    self?.messages.append(responseMessage)
-                } else {
-                    let errorMessage = ChatMessage(text: "Failed to receive response.", isUser: false)
-                    self?.messages.append(errorMessage)
+            // Add user message to chat
+            let userMessage = ChatMessage(text: messageText, isUser: true)
+            messages.append(userMessage)
+            
+            // Add a loading message
+            let loadingMessage = ChatMessage(text: "Sending...", isUser: false)
+            messages.append(loadingMessage)
+            
+            if let id = inventoryItemId {
+                // If inventory item ID is known, update the existing item
+                APIService.shared.updateInventoryItemText(id: id, text: messageText) { [weak self] response in
+                    DispatchQueue.main.async {
+                        // Remove loading message
+                        self?.messages.removeLast()
+                        
+                        if let responseText = response {
+                            let responseMessage = ChatMessage(text: responseText, isUser: false)
+                            self?.messages.append(responseMessage)
+                        } else {
+                            let errorMessage = ChatMessage(text: "Failed to receive response.", isUser: false)
+                            self?.messages.append(errorMessage)
+                        }
+                        
+                        // Clear the message input
+                        self?.messageText = ""
+                    }
                 }
-                
-                // Clear the message input
-                self?.messageText = ""
+            } else {
+                // If inventory item ID is not known, create a new inventory item
+                APIService.shared.createInventoryItemText(text: messageText) { [weak self] response, id in
+                    DispatchQueue.main.async {
+                        // Remove loading message
+                        self?.messages.removeLast()
+                        
+                        if let responseText = response {
+                            let responseMessage = ChatMessage(text: responseText, isUser: false)
+                            self?.messages.append(responseMessage)
+                            
+                            // Store the inventory item ID for future updates
+                            self?.inventoryItemId = id
+                        } else {
+                            let errorMessage = ChatMessage(text: "Failed to receive response.", isUser: false)
+                            self?.messages.append(errorMessage)
+                        }
+                        
+                        // Clear the message input
+                        self?.messageText = ""
+                    }
+                }
             }
         }
-     }
     
 //    private func fetchResponse(for message: String) {
 //        // Mock API call

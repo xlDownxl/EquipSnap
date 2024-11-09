@@ -111,65 +111,100 @@ class APIService {
         task.resume()
     }
     
-    func sendTextMessage(text: String, completion: @escaping (String?) -> Void) {
-        guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/text") else {
-            print("Invalid URL.")
-            completion(nil)
-            return
-        }
-
-        // Prepare JSON data
-        let body: [String: String] = ["text": text]
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: body, options: []) else {
-            print("Error serializing JSON")
-            completion(nil)
-            return
-        }
-
-        // Create the URLRequest
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-
-        // Send the request
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("Error sending text message: \(error)")
-                completion(nil)
+    func createInventoryItemText(text: String, completion: @escaping (String?, Int?) -> Void) {
+            guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/text") else {
+                print("Invalid URL.")
+                completion(nil, nil)
                 return
             }
 
-            // Check response status code
-            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-                print("Server returned status code \(httpResponse.statusCode)")
-                completion(nil)
+            let body: [String: String] = ["text": text]
+            guard let jsonData = try? JSONSerialization.data(withJSONObject: body, options: []) else {
+                print("Error serializing JSON")
+                completion(nil, nil)
                 return
             }
 
-            // Parse the response data
-            if let data = data {
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = jsonData
+
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Error creating inventory item: \(error)")
+                    completion(nil, nil)
+                    return
+                }
+
+                guard let data = data else {
+                    print("No data received")
+                    completion(nil, nil)
+                    return
+                }
+
                 do {
-                    // Decode the JSON response to extract the "message" property
                     if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                       let message = json["message"] as? String {
-                        completion(message)
+                       let message = json["message"] as? String,
+                       let inventory = json["inventory"] as? [String: Any],
+                       let id = inventory["id"] as? Int {
+                        completion(message, id)
                     } else {
                         print("Unexpected JSON format")
-                        completion(nil)
+                        completion(nil, nil)
                     }
                 } catch {
                     print("Error parsing JSON: \(error.localizedDescription)")
+                    completion(nil, nil)
+                }
+            }
+
+            task.resume()
+        }
+    
+        // Method to update an existing inventory item
+        func updateInventoryItemText(id: Int, text: String, completion: @escaping (String?) -> Void) {
+            guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/\(id)/text") else {
+                print("Invalid URL.")
+                completion(nil)
+                return
+            }
+
+            let body: [String: String] = ["text": text]
+            guard let jsonData = try? JSONSerialization.data(withJSONObject: body, options: []) else {
+                print("Error serializing JSON")
+                completion(nil)
+                return
+            }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = jsonData
+
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Error updating inventory item: \(error)")
+                    completion(nil)
+                    return
+                }
+
+                guard let data = data else {
+                    print("No data received")
+                    completion(nil)
+                    return
+                }
+
+                if let responseString = String(data: data, encoding: .utf8) {
+                    completion(responseString)
+                } else {
+                    print("Failed to decode response")
                     completion(nil)
                 }
-            } else {
-                print("No data or invalid encoding received")
-                completion(nil)
             }
-        }
 
-        task.resume()
-    }
+            task.resume()
+        }
     
     func fetchInventoryItems(completion: @escaping ([InventoryItem]) -> Void) {
         guard let url = URL(string: "http://granlund.lorenso.nl/api/rooms") else {
