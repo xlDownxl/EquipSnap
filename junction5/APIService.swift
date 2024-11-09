@@ -33,6 +33,7 @@ class APIService {
         // Create the URLRequest
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
 
         // Generate boundary string
         let boundary = UUID().uuidString
@@ -84,6 +85,86 @@ class APIService {
             } else {
                 print("Invalid response from server")
                 completion(false)
+            }
+            
+            // Access the body of the response
+            if let responseData = data {
+                // For text-based responses
+                if let responseString = String(data: responseData, encoding: .utf8) {
+                    print("Response Body as String:")
+                    print(responseString)
+                }
+                
+                // For JSON responses
+                do {
+                    let jsonObject = try JSONSerialization.jsonObject(with: responseData, options: [])
+                    print("Response Body as JSON Object:")
+                    print(jsonObject)
+                } catch {
+                    print("Error parsing JSON: \(error.localizedDescription)")
+                }
+            } else {
+                print("No data received")
+            }
+        }
+
+        task.resume()
+    }
+    
+    func sendTextMessage(text: String, completion: @escaping (String?) -> Void) {
+        guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/text") else {
+            print("Invalid URL.")
+            completion(nil)
+            return
+        }
+
+        // Prepare JSON data
+        let body: [String: String] = ["text": text]
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: body, options: []) else {
+            print("Error serializing JSON")
+            completion(nil)
+            return
+        }
+
+        // Create the URLRequest
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+
+        // Send the request
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error sending text message: \(error)")
+                completion(nil)
+                return
+            }
+
+            // Check response status code
+            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+                print("Server returned status code \(httpResponse.statusCode)")
+                completion(nil)
+                return
+            }
+
+            // Parse the response data
+            if let data = data {
+                do {
+                    // Decode the JSON response to extract the "message" property
+                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                       let message = json["message"] as? String {
+                        completion(message)
+                    } else {
+                        print("Unexpected JSON format")
+                        completion(nil)
+                    }
+                } catch {
+                    print("Error parsing JSON: \(error.localizedDescription)")
+                    completion(nil)
+                }
+            } else {
+                print("No data or invalid encoding received")
+                completion(nil)
             }
         }
 

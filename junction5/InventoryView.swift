@@ -45,17 +45,19 @@ struct InventoryView: View {
                         .padding(.bottom, 20)
 
                     Button(action: {
-                        // Add inventory button action (no functionality needed for now)
-                    }) {
-                        Text("Add inventory")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.blue)
-                            .cornerRadius(10)
-                            .padding(.horizontal, 50)
-                    }
+                            // Button action can remain empty, as NavigationLink handles navigation
+                        }) {
+                            NavigationLink(destination: ChatView()) {
+                                Text("Add inventory")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color.blue)
+                                    .cornerRadius(10)
+                                    .padding(.horizontal, 50)
+                            }
+                        }
 
                     Spacer()
                 }
