@@ -6,21 +6,19 @@ struct WelcomeView: View {
             VStack {
                 Spacer()
                 
-                // Placeholder Image (Center)
-                Image(systemName: "photo")
+                // Custom Image (Center)
+                Image("Frame_122") // Replace "welcomeImage" with the name of your image in Assets
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 50, height: 50)
-                    .foregroundColor(Color.blue.opacity(0.5))
-                    .background(Color.blue.opacity(0.1))
+                    .frame(width: 400, height: 400) // Adjust size as needed
                     .cornerRadius(10)
-                    .padding(.bottom, 50)
+                    .padding(.bottom, 00)
                 
                 Spacer()
                 
                 // Welcome Text
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Hi Heikki,")
+                VStack(alignment: .leading, spacing: 40) {
+                    Text("            Hey")
                         .font(.title)
                         .fontWeight(.bold)
                     
@@ -43,7 +41,12 @@ struct WelcomeView: View {
                 }
                 .padding(.bottom, 30)
             }
-            .background(Color.blue.opacity(0.1).edgesIgnoringSafeArea(.all))
+            //.background(Color.blue.opacity(0.1).edgesIgnoringSafeArea(.all))
+            .navigationBarHidden(true)
         }
     }
+}
+
+#Preview {
+    WelcomeView()
 }
