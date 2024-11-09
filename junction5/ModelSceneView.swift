@@ -53,17 +53,17 @@ struct ModelSceneView: UIViewRepresentable {
         directionalLightNode.eulerAngles = SCNVector3Make(-.pi / 3, 0, 0)
         scene.rootNode.addChildNode(directionalLightNode)
         
-     /*   let cameraNode = SCNNode()
+        let cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
         // Position the camera above the model
-        cameraNode.position = SCNVector3(x: 0, y: 6, z: 0)
+        cameraNode.position = SCNVector3(x: 28, y: 75, z: -25)
         // Rotate the camera to look down at the model
-        cameraNode.eulerAngles = SCNVector3(0, 0, 0)
+        cameraNode.eulerAngles = SCNVector3(-Float.pi / 2, 0, 0)
         cameraNode.camera?.zFar = 1000
         // Add the camera node to the scene
         scene.rootNode.addChildNode(cameraNode)
         // Set the camera as the point of view
-        sceneView.pointOfView = cameraNode*/
+        sceneView.pointOfView = cameraNode
         
         // Set default material properties
         scene.rootNode.enumerateChildNodes { (node, _) in
