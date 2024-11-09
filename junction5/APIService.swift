@@ -16,194 +16,132 @@ class APIService {
     
     private init() {}
     
-    func uploadInventoryItem(image: UIImage, x: Float, y: Float, z: Float, completion: @escaping (Bool) -> Void) {
+    func uploadInventoryItem(image: UIImage, x: Float, y: Float, z: Float, completion: @escaping (String?, Int?) -> Void) {
         guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory") else {
             print("Invalid URL.")
-            completion(false)
+            completion("Invalid URL.", nil)
             return
         }
 
-        // Prepare the image data
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             print("Could not get JPEG representation of UIImage")
-            completion(false)
+            completion("Image conversion failed.", nil)
             return
         }
 
-        // Create the URLRequest
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Accept")
-
-        // Generate boundary string
         let boundary = UUID().uuidString
-
-        // Set Content-Type in HTTP header
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
-        // Create the data
         var body = Data()
-
-        // Add the image data to the raw http request data
-        let filename = "image.jpg"
-        let mimeType = "image/jpeg"
         body.append("--\(boundary)\r\n")
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n")
-        body.append("Content-Type: \(mimeType)\r\n\r\n")
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"image.jpg\"\r\n")
+        body.append("Content-Type: image/jpeg\r\n\r\n")
         body.append(imageData)
         body.append("\r\n")
 
-        // Add x, y, z fields
         let fields: [String: Float] = ["x": x, "y": y, "z": z]
         for (key, value) in fields {
             body.append("--\(boundary)\r\n")
             body.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n")
             body.append("\(value)\r\n")
         }
-
-        // Close the body with boundary
         body.append("--\(boundary)--\r\n")
-
         request.httpBody = body
 
-        // Send the request
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 print("Error uploading inventory item: \(error)")
-                completion(false)
+                completion("Failed to upload item.", nil)
                 return
             }
 
-            // Check response status code
-            if let httpResponse = response as? HTTPURLResponse {
-                if (200...299).contains(httpResponse.statusCode) {
-                    completion(true)
-                } else {
-                    print("Server returned status code \(httpResponse.statusCode)")
-                    completion(false)
-                }
-            } else {
-                print("Invalid response from server")
-                completion(false)
-            }
-            
-            // Access the body of the response
-            if let responseData = data {
-                // For text-based responses
-                if let responseString = String(data: responseData, encoding: .utf8) {
-                    print("Response Body as String:")
-                    print(responseString)
-                }
-                
-                // For JSON responses
-                do {
-                    let jsonObject = try JSONSerialization.jsonObject(with: responseData, options: [])
-                    print("Response Body as JSON Object:")
-                    print(jsonObject)
-                } catch {
-                    print("Error parsing JSON: \(error.localizedDescription)")
-                }
-            } else {
+            guard let responseData = data else {
                 print("No data received")
+                completion("No response from server.", nil)
+                return
+            }
+
+            do {
+                if let json = try JSONSerialization.jsonObject(with: responseData, options: []) as? [String: Any] {
+                    let message = json["message"] as? String
+                    if let inventory = json["inventory"] as? [String: Any],
+                       let inventoryID = inventory["id"] as? Int {
+                        completion(message, inventoryID)
+                    } else {
+                        completion(message, nil)
+                    }
+                } else {
+                    completion("Invalid server response.", nil)
+                }
+            } catch {
+                print("Error parsing JSON: \(error.localizedDescription)")
+                completion("Failed to parse server response.", nil)
             }
         }
-
         task.resume()
     }
     
-    func updateInventoryItem(inventoryID: Int, image: UIImage, x: Float, y: Float, z: Float, completion: @escaping (Bool) -> Void) {
-        // Construct the URL with the inventory ID
-        guard let url = URL(string: "http://granlund.lorenso.nl/admin/inventory-items/\(inventoryID)") else {
+    func updateInventoryItem(inventoryID: Int, image: UIImage, x: Float, y: Float, z: Float, completion: @escaping (String?) -> Void) {
+        guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/\(inventoryID)") else {
             print("Invalid URL.")
-            completion(false)
+            completion("Invalid URL.")
             return
         }
 
-        // Prepare the image data
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             print("Could not get JPEG representation of UIImage")
-            completion(false)
+            completion("Image conversion failed.")
             return
         }
 
-        // Create the URLRequest
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Accept")
-
-        // Generate boundary string
         let boundary = UUID().uuidString
-
-        // Set Content-Type in HTTP header
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
-        // Create the data
         var body = Data()
-
-        // Add the image data to the raw HTTP request data
-        let filename = "image.jpg"
-        let mimeType = "image/jpeg"
         body.append("--\(boundary)\r\n")
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n")
-        body.append("Content-Type: \(mimeType)\r\n\r\n")
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"image.jpg\"\r\n")
+        body.append("Content-Type: image/jpeg\r\n\r\n")
         body.append(imageData)
         body.append("\r\n")
 
-        // Add x, y, z fields
         let fields: [String: Float] = ["x": x, "y": y, "z": z]
         for (key, value) in fields {
             body.append("--\(boundary)\r\n")
             body.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n")
             body.append("\(value)\r\n")
         }
-
-        // Close the body with boundary
         body.append("--\(boundary)--\r\n")
-
         request.httpBody = body
 
-        // Send the request
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 print("Error updating inventory item: \(error)")
-                completion(false)
+                completion("Failed to update item.")
                 return
             }
 
-            // Check response status code
-            if let httpResponse = response as? HTTPURLResponse {
-                if (200...299).contains(httpResponse.statusCode) {
-                    completion(true)
-                } else {
-                    print("Server returned status code \(httpResponse.statusCode)")
-                    completion(false)
-                }
-            } else {
-                print("Invalid response from server")
-                completion(false)
-            }
-            
-            // Access the body of the response
-            if let responseData = data {
-                // For text-based responses
-                if let responseString = String(data: responseData, encoding: .utf8) {
-                    print("Response Body as String:")
-                    print(responseString)
-                }
-                
-                // For JSON responses
-                do {
-                    let jsonObject = try JSONSerialization.jsonObject(with: responseData, options: [])
-                    print("Response Body as JSON Object:")
-                    print(jsonObject)
-                } catch {
-                    print("Error parsing JSON: \(error.localizedDescription)")
-                }
-            } else {
+            guard let responseData = data else {
                 print("No data received")
+                completion("No response from server.")
+                return
+            }
+
+            do {
+                if let json = try JSONSerialization.jsonObject(with: responseData, options: []) as? [String: Any] {
+                    let message = json["message"] as? String
+                    completion(message)
+                } else {
+                    completion("Invalid server response.")
+                }
+            } catch {
+                print("Error parsing JSON: \(error.localizedDescription)")
+                completion("Failed to parse server response.")
             }
         }
-
         task.resume()
     }
                 
