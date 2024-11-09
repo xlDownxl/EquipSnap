@@ -211,7 +211,7 @@ struct ChatView: View {
                     .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: -5)
                 }
                 .background(Color.white)
-                .edgesIgnoringSafeArea(.bottom)
+                .edgesIgnoringSafeArea(.bottom).navigationBarBackButtonHidden(true)
     }
 }
 

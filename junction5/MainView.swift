@@ -2,7 +2,7 @@ import SwiftUI
 
 struct MainView: View {
     var body: some View {
-        NavigationView {
+        
             VStack {
                 NavigationLink(destination: InventoryView()) { // Navigate to InventoryView
                     Text("Add Inventory")
@@ -16,5 +16,5 @@ struct MainView: View {
             .navigationBarBackButtonHidden(true)
             .navigationTitle("Main View")
         }
-    }
+    
 }
