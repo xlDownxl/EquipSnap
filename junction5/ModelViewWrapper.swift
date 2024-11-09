@@ -31,7 +31,7 @@ struct ModelViewWrapper: View {
                         }) {
                             Text("ADDED")
                                 .foregroundColor(.white) // White text color
-                                .padding(.horizontal,14)
+                                .padding(.horizontal,8)
                                 .padding(.vertical,6)
                                 .font(.system(size: 12))// Add some padding inside the button
                                 .background(Color.green) // Green background color
@@ -60,14 +60,10 @@ struct ModelViewWrapper: View {
                         }.navigationTitle("Details")
                         
                     }
+
                     .frame(width: 230, height: 260)
                     .background(Color.white)
-                    //.cornerRadius(10)
-                   /* .shadow(radius: 5)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.gray, lineWidth: 1)
-                    )*/
+                    .cornerRadius(10)
                     .transition(.scale)
                 }
                 

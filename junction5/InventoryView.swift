@@ -144,6 +144,7 @@ struct InventoryRow: View {
             VStack(alignment: .leading) {
                 Text(item.equipment_type)
                     .font(.headline)
+                    .foregroundColor(Color(red: 31 / 255, green: 32 / 255, blue: 36 / 255))
                 Text(item.manufacturer)
                     .font(.subheadline)
                     .foregroundColor(.gray)
