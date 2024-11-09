@@ -206,6 +206,60 @@ class APIService {
             task.resume()
         }
     
+    func uploadAudioFile(inventoryID: Int, audioURL: URL, completion: @escaping (Bool) -> Void) {
+            guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/\(inventoryID)/audio") else {
+                print("Invalid URL")
+                completion(false)
+                return
+            }
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            
+            // Set up multipart form data
+            let boundary = UUID().uuidString
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+            
+            // Prepare body
+            var body = Data()
+            
+            // Add audio data to the body
+            body.append("--\(boundary)\r\n")
+            body.append("Content-Disposition: form-data; name=\"audio\"; filename=\"recording.m4a\"\r\n")
+            body.append("Content-Type: audio/m4a\r\n\r\n")
+            
+            do {
+                let audioData = try Data(contentsOf: audioURL)
+                body.append(audioData)
+            } catch {
+                print("Failed to read audio data: \(error)")
+                completion(false)
+                return
+            }
+            
+            body.append("\r\n--\(boundary)--\r\n")
+            request.httpBody = body
+            
+            // Perform upload
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Error uploading audio: \(error)")
+                    completion(false)
+                    return
+                }
+                
+                guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                    print("Failed to upload audio, server error")
+                    completion(false)
+                    return
+                }
+                
+                completion(true)
+            }
+            
+            task.resume()
+        }
+    
     func fetchInventoryItems(completion: @escaping ([InventoryItem]) -> Void) {
         guard let url = URL(string: "http://granlund.lorenso.nl/api/rooms") else {
             print("Invalid URL.")
