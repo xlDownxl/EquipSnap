@@ -1,13 +1,5 @@
-//
-//  CoordinateView.swift
-//  junction5
-//
-//  Created by Joswig, Niclas on 9.11.2024.
-//
-
 import SwiftUI
 import SceneKit
-
 
 struct CoordinateView: View {
     var coordinate: SCNVector3
@@ -24,6 +16,8 @@ struct CoordinateView: View {
             HStack {
                 Button("Save") {
                     savedCoordinatesModel.coordinates.append(coordinate)
+                    // Post notification when coordinate is saved
+                    NotificationCenter.default.post(name: NSNotification.Name("CoordinateSaved"), object: nil)
                     presentationMode.wrappedValue.dismiss()
                 }
                 .padding()

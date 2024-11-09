@@ -57,7 +57,7 @@ struct ModelSceneView: UIViewRepresentable {
         sceneView.scene = scene
         
         // **Create a custom camera node**
-        let cameraNode = SCNNode()
+      /*  let cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
         
         // **Compute the center of the model to set as the target**
@@ -77,6 +77,8 @@ struct ModelSceneView: UIViewRepresentable {
          
          // **Set the camera controller's target to the center of the model**
          sceneView.defaultCameraController.target = center
+       
+       */
         
         // Add tap gesture recognizer
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(context.coordinator.handleTap(_:)))
@@ -109,39 +111,39 @@ struct ModelSceneView: UIViewRepresentable {
             var parent: ModelSceneView
             var sceneView: SCNView?
             var savedCoordinatesModel: SavedCoordinatesModel
-            var cancellable: AnyCancellable?
 
             init(_ parent: ModelSceneView) {
                 self.parent = parent
                 self.savedCoordinatesModel = parent.savedCoordinatesModel
-
-                // Observe changes to the saved coordinates
                 super.init()
-                self.cancellable = savedCoordinatesModel.$coordinates.sink { [weak self] _ in
-                    self?.updateRedDots()
-                }
+                // Add observer for 'CoordinateSaved' notification
+                NotificationCenter.default.addObserver(self, selector: #selector(coordinateSaved), name: NSNotification.Name("CoordinateSaved"), object: nil)
             }
 
             deinit {
-                cancellable?.cancel()
+                NotificationCenter.default.removeObserver(self, name: NSNotification.Name("CoordinateSaved"), object: nil)
             }
 
-            @objc func handleTap(_ gestureRecognize: UIGestureRecognizer) {
-                guard let sceneView = sceneView else { return }
-                let touchLocation = gestureRecognize.location(in: sceneView)
-                let hitResults = sceneView.hitTest(touchLocation, options: [:])
-                if let hit = hitResults.first {
-                    let position = hit.worldCoordinates
-                    print("Touched position: \(position)")
+            @objc func coordinateSaved() {
+                updateRedDots()
+            }
 
-                    DispatchQueue.main.async {
-                        // Set the selected coordinate to trigger navigation
-                        self.parent.selectedCoordinate = position
+        @objc func handleTap(_ gestureRecognize: UIGestureRecognizer) {
+                    guard let sceneView = sceneView else { return }
+                    let touchLocation = gestureRecognize.location(in: sceneView)
+                    let hitResults = sceneView.hitTest(touchLocation, options: [:])
+                    if let hit = hitResults.first {
+                        let position = hit.worldCoordinates
+                        print("Touched position: \(position)")
+
+                        DispatchQueue.main.async {
+                            // Set the selected coordinate to trigger navigation
+                            self.parent.selectedCoordinate = position
+                        }
+                    } else {
+                        print("No hit detected")
                     }
-                } else {
-                    print("No hit detected")
                 }
-            }
 
             func updateRedDots() {
                 guard let sceneView = sceneView else { return }
@@ -156,7 +158,7 @@ struct ModelSceneView: UIViewRepresentable {
 
                 // Add red dots for saved coordinates
                 for coordinate in savedCoordinatesModel.coordinates {
-                    let sphere = SCNSphere(radius: 0.2)
+                    let sphere = SCNSphere(radius: 0.1)
                     sphere.firstMaterial?.diffuse.contents = UIColor.red
                     let node = SCNNode(geometry: sphere)
                     node.position = coordinate
@@ -165,4 +167,4 @@ struct ModelSceneView: UIViewRepresentable {
                 }
             }
         }
-}
+    }
