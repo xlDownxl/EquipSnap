@@ -6,27 +6,27 @@ struct WelcomeView: View {
             VStack {
                 Spacer()
                 
-                // Custom Image (Center)
-                Image("Frame_122") // Replace "welcomeImage" with the name of your image in Assets
+                Image("Frame_119") // Replace "Frame_119" with the name of your image in Assets
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 400, height: 400) // Adjust size as needed
+                    .frame(width: 200, height: 200) // Adjust to a smaller width and height
                     .cornerRadius(10)
-                    .padding(.bottom, 00)
+                    .padding(.bottom, 40)
                 
                 Spacer()
                 
                 // Welcome Text
-                VStack(alignment: .leading, spacing: 40) {
-                    Text("            Hey")
-                        .font(.title)
+                VStack(alignment: .leading, spacing: 0) { // Set alignment to .leading for left alignment
+                    Text("Hi Heikki,")
+                        .font(.largeTitle)
                         .fontWeight(.bold)
                     
                     Text("welcome back to EquipSnap!")
-                        .font(.title)
+                        .font(.largeTitle)
                         .fontWeight(.bold)
                 }
                 .padding()
+                .frame(maxWidth: .infinity, alignment: .leading) // Make the VStack take the full width and align to the left
                 
                 // Next Button with Navigation to MainView
                 NavigationLink(destination: MainView()) {
