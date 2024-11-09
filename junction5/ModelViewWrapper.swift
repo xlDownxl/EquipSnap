@@ -17,6 +17,14 @@ struct ModelViewWrapper: View {
                 )
                 .edgesIgnoringSafeArea(.all)
                 if showPopup, let tappedItem = tappedItem {
+                    
+                    Color.black.opacity(0.5)
+                         .edgesIgnoringSafeArea(.all)
+                         .onTapGesture {
+                             // Dismiss the popup when the background is tapped
+                             showPopup = false
+                         }
+                    
                     VStack (alignment: .leading) {
                         Button(action: {
                             // Action goes here
