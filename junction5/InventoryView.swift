@@ -47,7 +47,7 @@ struct InventoryView: View {
                     Button(action: {
                             // Button action can remain empty, as NavigationLink handles navigation
                         }) {
-                            NavigationLink(destination: ChatView()) {
+                            NavigationLink(destination: ChatView(position:nil)) {
                                 Text("Add inventory")
                                     .font(.headline)
                                     .foregroundColor(.white)

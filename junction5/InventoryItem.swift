@@ -56,7 +56,12 @@ struct InventoryItem: Identifiable, Codable {
             last_check = try container.decodeIfPresent(String.self, forKey: .last_check) ?? "N/A"
             ai_comments = try container.decodeIfPresent(String.self, forKey: .ai_comments) ?? "No comments"
             condition = try container.decodeIfPresent(String.self, forKey: .condition) ?? "N/A"
-            image = try container.decodeIfPresent(String.self, forKey: .image) ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ficon-library.com%2Fimages%2Fno-image-icon%2Fno-image-icon-13.jpg&f=1&nofb=1&ipt=34478d9d5dfd08808a0127536a85364eff26467164443f558b83007928d13d7e&ipo=images"
+            let image_tmp = try container.decodeIfPresent(String.self, forKey: .image) ?? ""
+            if image_tmp == "" {
+                image = "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ficon-library.com%2Fimages%2Fno-image-icon%2Fno-image-icon-13.jpg&f=1&nofb=1&ipt=34478d9d5dfd08808a0127536a85364eff26467164443f558b83007928d13d7e&ipo=images"
+            }else{
+                image = "http://granlund.lorenso.nl/storage" + image_tmp
+            }
         }
 }
 

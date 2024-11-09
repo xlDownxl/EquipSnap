@@ -147,7 +147,7 @@ struct ModelSceneView: UIViewRepresentable {
                 // Dismiss the alert before navigating
                 self.alertController?.dismiss(animated: true, completion: {
                     self.parent.showPopup = false
-                    self.navigateToChatView()
+                    self.navigateToChatView(position: position)
                 })
             }))
 
@@ -165,9 +165,9 @@ struct ModelSceneView: UIViewRepresentable {
             }
         }
         
-        func navigateToChatView() {
+        func navigateToChatView(position: SCNVector3) {
             guard let position = selectedCoordinate else { return }
-            let chatView = ChatView() // Initialize your ChatView
+            let chatView = ChatView(position:position) // Initialize your ChatView
             let chatViewController = UIHostingController(rootView: chatView) // Wrap ChatView in a UIHostingController
 
             DispatchQueue.main.async {

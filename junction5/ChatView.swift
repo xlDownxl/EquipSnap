@@ -4,6 +4,7 @@
 //
 //  Created by Lorenso D'Agostino on 09/11/2024.
 //
+import SceneKit
 
 import SwiftUI
 import Combine
@@ -31,6 +32,18 @@ class ChatViewModel: ObservableObject {
     private var audioFilename: URL?
     public var isRecording = false
     
+    let position: SCNVector3?
+
+    init(position: SCNVector3?) {
+        self.position = position
+        
+    }
+    
+    
+   /* private var x = Float
+    private var y = Float
+    private var z = Float
+    */
     func sendMessage() {
         // Add user message to chat
         let userMessage = ChatMessage(text: messageText, isUser: true)
@@ -156,7 +169,10 @@ class ChatViewModel: ObservableObject {
         
         if let id = inventoryItemId {
             // Update existing inventory item
-            APIService.shared.updateInventoryItem(inventoryID: id, image: image, x: 0.0, y: 0.0, z: 0.0) { [weak self] responseMessage in
+            var xPosition: Float { position?.x ?? -500}
+            var yPosition: Float {  position?.y ?? -500}
+            var zPosition: Float {position?.z ?? -500}
+            APIService.shared.updateInventoryItem(inventoryID: id, image: image, x: xPosition, y: yPosition, z: zPosition) { [weak self] responseMessage in
                 DispatchQueue.main.async {
                     self?.messages.removeLast()
                     
@@ -169,7 +185,10 @@ class ChatViewModel: ObservableObject {
             }
         } else {
             // Create new inventory item
-            APIService.shared.uploadInventoryItem(image: image, x: 0.0, y: 0.0, z: 0.0) { [weak self] responseMessage, newInventoryID in
+            var xPosition: Float { position?.x ?? -500}
+            var yPosition: Float {  position?.y ?? -500}
+            var zPosition: Float {position?.z ?? -500}
+            APIService.shared.uploadInventoryItem(image: image, x: xPosition, y: yPosition, z: zPosition) { [weak self] responseMessage, newInventoryID in
                 DispatchQueue.main.async {
                     self?.messages.removeLast()
                     
@@ -227,11 +246,16 @@ class ChatViewModel: ObservableObject {
 
 struct ChatView: View {
     @State private var messageText: String = ""
-    @StateObject private var viewModel = ChatViewModel()
-    
+    @StateObject private var viewModel: ChatViewModel
+
+    // Update initializer to take `position` and initialize `viewModel`
+    init(position: SCNVector3?) {
+        _viewModel = StateObject(wrappedValue: ChatViewModel(position: position))
+    }
     // State for camera
     @State private var showImagePicker = false
     @State private var selectedImage: UIImage?
+    
     
     var body: some View {
         VStack(spacing: 0) {
@@ -424,5 +448,5 @@ struct CameraImagePicker: UIViewControllerRepresentable {
 }
 
 #Preview {
-    ChatView()
+   // ChatView()
 }
