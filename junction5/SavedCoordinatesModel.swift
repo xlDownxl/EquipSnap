@@ -9,7 +9,7 @@ import Foundation
 import SceneKit
 import Combine
 
-class SavedCoordinatesModel: ObservableObject {
+/*class SavedCoordinatesModel: ObservableObject {
     @Published var coordinates: [SCNVector3] = []
-}
+}*/
 

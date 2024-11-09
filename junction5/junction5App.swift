@@ -14,10 +14,10 @@ struct junction5App: App {
     var body: some Scene {
         WindowGroup {
 
-        /*    ContentView() .environmentObject(inventoryItemsModel)
+           /* ContentView() .environmentObject(inventoryItemsModel)
                 .onAppear {
                     inventoryItemsModel.startFetching()
-                }*/
+                } */
 
             WelcomeView()
 

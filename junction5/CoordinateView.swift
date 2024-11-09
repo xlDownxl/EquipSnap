@@ -3,7 +3,7 @@ import SceneKit
 
 struct CoordinateView: View {
     var coordinate: SCNVector3
-    @EnvironmentObject var savedCoordinatesModel: SavedCoordinatesModel
+    //@EnvironmentObject var savedCoordinatesModel: SavedCoordinatesModel
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
@@ -15,7 +15,7 @@ struct CoordinateView: View {
             Spacer()
             HStack {
                 Button("Save") {
-                    savedCoordinatesModel.coordinates.append(coordinate)
+                    //savedCoordinatesModel.coordinates.append(coordinate)
                     // Post notification when coordinate is saved
                     NotificationCenter.default.post(name: NSNotification.Name("CoordinateSaved"), object: nil)
                     presentationMode.wrappedValue.dismiss()
@@ -31,5 +31,5 @@ struct CoordinateView: View {
 }
 
 #Preview {
-    CoordinateView(coordinate: SCNVector3(0, 0, 0)).environmentObject(SavedCoordinatesModel())
+    CoordinateView(coordinate: SCNVector3(0, 0, 0))//.environmentObject(SavedCoordinatesModel())
 }
