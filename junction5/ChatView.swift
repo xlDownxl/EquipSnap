@@ -27,23 +27,19 @@ class ChatViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     private var inventoryItemId: Int? // Stores the ID of the created inventory item
-    
+
     private var audioRecorder: AVAudioRecorder?
     private var audioFilename: URL?
     public var isRecording = false
     
     let position: SCNVector3?
-
-    init(position: SCNVector3?) {
+    init(position: SCNVector3?, inventoryItemId: Int? = nil) {
         self.position = position
-        
+        self.inventoryItemId = inventoryItemId
+        print(inventoryItemId)
     }
     
-    
-   /* private var x = Float
-    private var y = Float
-    private var z = Float
-    */
+
     func sendMessage() {
         // Add user message to chat
         let userMessage = ChatMessage(text: messageText, isUser: true)
@@ -249,9 +245,10 @@ struct ChatView: View {
     @StateObject private var viewModel: ChatViewModel
 
     // Update initializer to take `position` and initialize `viewModel`
-    init(position: SCNVector3?) {
-        _viewModel = StateObject(wrappedValue: ChatViewModel(position: position))
+    init(position: SCNVector3?, inventoryItemId: Int? = nil) {
+        _viewModel = StateObject(wrappedValue: ChatViewModel(position: position, inventoryItemId: inventoryItemId))
     }
+    
     // State for camera
     @State private var showImagePicker = false
     @State private var selectedImage: UIImage?
@@ -448,5 +445,5 @@ struct CameraImagePicker: UIViewControllerRepresentable {
 }
 
 #Preview {
-   // ChatView()
+    ChatView(position:nil)
 }

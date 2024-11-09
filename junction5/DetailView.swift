@@ -65,10 +65,8 @@ struct DetailView: View {
                 Spacer()
                 
                 // Save Button
-                Button(action: {
-                    // Save changes action
-                }) {
-                    Text("Save changes")
+                NavigationLink(destination: ChatView(position: nil, inventoryItemId: item.id)) {
+                    Text("Make Edits")
                         .font(.headline)
                         .foregroundColor(.blue)
                         .frame(maxWidth: .infinity)
