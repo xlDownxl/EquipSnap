@@ -2,7 +2,7 @@ import SwiftUI
 import SceneKit
 
 struct InventoryView: View {
-    @State private var selectedView: String = "List view"
+    @State private var selectedView: String = "Map view"
     @StateObject var inventoryItemsModel = InventoryItemsModel()
 
     var body: some View {
