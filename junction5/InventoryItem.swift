@@ -20,7 +20,7 @@ struct InventoryItem: Identifiable, Codable {
     let last_check: String
     let ai_comments: String
     let condition: String
-    let image: String
+    let image: String?
     
     enum CodingKeys: String, CodingKey {
         case id

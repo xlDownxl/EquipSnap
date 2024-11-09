@@ -263,6 +263,7 @@ class ChatViewModel: ObservableObject {
 struct ChatView: View {
     @State private var messageText: String = ""
     @StateObject private var viewModel: ChatViewModel
+    @Environment(\.presentationMode) var presentationMode // Add this property for dismissing the view
 
     // Update initializer to take `position` and initialize `viewModel`
     init(position: SCNVector3?, inventoryItemId: Int? = nil) {
@@ -279,7 +280,7 @@ struct ChatView: View {
             // Navigation Bar
             HStack {
                 Button(action: {
-                    // Back action here
+                    presentationMode.wrappedValue.dismiss() // Dismiss the view when back button is tapped
                 }) {
                     Image(systemName: "chevron.left")
                         .foregroundColor(.blue)
@@ -288,23 +289,23 @@ struct ChatView: View {
                 
                 Spacer()
                 
-                Text("Adding inventory")
+                Text("Manage inventory")
                     .font(.headline)
                     .bold()
                 
                 Spacer()
                 
-                Button(action: {
-                    // Details action here
-                }) {
-                    Text("Details")
-                        .font(.footnote)
-                        .foregroundColor(.gray)
-                        .padding(10)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(10)
-                }
-                .padding()
+//                Button(action: {
+//                    // Details action here
+//                }) {
+//                    Text("Details")
+//                        .font(.footnote)
+//                        .foregroundColor(.gray)
+//                        .padding(10)
+//                        .background(Color.gray.opacity(0.1))
+//                        .cornerRadius(10)
+//                }
+//                .padding()
             }
             
             Divider()
