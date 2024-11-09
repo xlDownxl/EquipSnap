@@ -7,7 +7,7 @@ struct DetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 // Item Image
-                AsyncImage(url: URL(string: item.image)) { image in
+                AsyncImage(url: URL(string: item.image ?? "fallback")) { image in
                     image
                         .resizable()
                         .scaledToFill()
