@@ -11,7 +11,6 @@ import SwiftUI
 struct junction5App: App {
     @StateObject var inventoryItemsModel = InventoryItemsModel()
     
-    
     var body: some Scene {
         WindowGroup {
             ContentView() .environmentObject(inventoryItemsModel)

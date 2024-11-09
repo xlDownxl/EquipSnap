@@ -8,13 +8,10 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject var savedCoordinatesModel = SavedCoordinatesModel()
-    
     var body: some View {
         NavigationView {
             ModelViewWrapper()
                 .edgesIgnoringSafeArea(.all)
-                .environmentObject(savedCoordinatesModel)
         }
     }
 }
