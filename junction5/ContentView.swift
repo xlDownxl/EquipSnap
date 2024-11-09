@@ -8,12 +8,18 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject var savedCoordinatesModel = SavedCoordinatesModel()
+    
     var body: some View {
-        ModelSceneView()
-            .edgesIgnoringSafeArea(.all) // Optional: Make the model view full screen
+        NavigationView {
+            ModelViewWrapper()
+                .edgesIgnoringSafeArea(.all)
+                .environmentObject(savedCoordinatesModel)
+        }
     }
 }
 
 #Preview {
     ContentView()
 }
+

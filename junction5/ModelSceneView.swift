@@ -7,14 +7,21 @@
 
 import SwiftUI
 import SceneKit
+import Combine
 
 struct ModelSceneView: UIViewRepresentable {
+    @Binding var selectedCoordinate: SCNVector3?
+    var savedCoordinatesModel: SavedCoordinatesModel
+
+    
     func makeUIView(context: Context) -> SCNView {
         // Initialize the SCNView
         let sceneView = SCNView()
         sceneView.allowsCameraControl = true // Enable user interaction
         //sceneView.backgroundColor = UIColor.gray // Set background color
-  
+
+        
+        
         
         // Load the USDZ model
         guard let scene = SCNScene(named: "building_meters.usdz") else {
@@ -78,30 +85,84 @@ struct ModelSceneView: UIViewRepresentable {
         // Set the delegate
         sceneView.delegate = context.coordinator
         
+        // Store sceneView and model in the coordinator
+        context.coordinator.sceneView = sceneView
+        context.coordinator.savedCoordinatesModel = savedCoordinatesModel
+
+        // Initial update of red dots
+        context.coordinator.updateRedDots()
+        
         return sceneView
     }
     
     func updateUIView(_ uiView: SCNView, context: Context) {
-        // Update the view if needed
+        // This method can be used to update the view when state changes
+        context.coordinator.updateRedDots()
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        Coordinator(self)
     }
     
     // Coordinator class to handle gestures and events
     class Coordinator: NSObject, SCNSceneRendererDelegate {
-        
-        @objc func handleTap(_ gestureRecognize: UIGestureRecognizer) {
-            let sceneView = gestureRecognize.view as! SCNView
-            let touchLocation = gestureRecognize.location(in: sceneView)
-            let hitResults = sceneView.hitTest(touchLocation, options: [:])
-            if let hit = hitResults.first {
-                let position = hit.worldCoordinates
-                print("Touched position: \(position)")
-            } else {
-                print("No hit detected")
+            var parent: ModelSceneView
+            var sceneView: SCNView?
+            var savedCoordinatesModel: SavedCoordinatesModel
+            var cancellable: AnyCancellable?
+
+            init(_ parent: ModelSceneView) {
+                self.parent = parent
+                self.savedCoordinatesModel = parent.savedCoordinatesModel
+
+                // Observe changes to the saved coordinates
+                super.init()
+                self.cancellable = savedCoordinatesModel.$coordinates.sink { [weak self] _ in
+                    self?.updateRedDots()
+                }
+            }
+
+            deinit {
+                cancellable?.cancel()
+            }
+
+            @objc func handleTap(_ gestureRecognize: UIGestureRecognizer) {
+                guard let sceneView = sceneView else { return }
+                let touchLocation = gestureRecognize.location(in: sceneView)
+                let hitResults = sceneView.hitTest(touchLocation, options: [:])
+                if let hit = hitResults.first {
+                    let position = hit.worldCoordinates
+                    print("Touched position: \(position)")
+
+                    DispatchQueue.main.async {
+                        // Set the selected coordinate to trigger navigation
+                        self.parent.selectedCoordinate = position
+                    }
+                } else {
+                    print("No hit detected")
+                }
+            }
+
+            func updateRedDots() {
+                guard let sceneView = sceneView else { return }
+                guard let scene = sceneView.scene else { return }
+
+                // Remove existing red dots
+                scene.rootNode.enumerateChildNodes { (node, _) in
+                    if node.name == "RedDot" {
+                        node.removeFromParentNode()
+                    }
+                }
+
+                // Add red dots for saved coordinates
+                for coordinate in savedCoordinatesModel.coordinates {
+                    let sphere = SCNSphere(radius: 0.2)
+                    sphere.firstMaterial?.diffuse.contents = UIColor.red
+                    let node = SCNNode(geometry: sphere)
+                    node.position = coordinate
+                    node.name = "RedDot"
+                    scene.rootNode.addChildNode(node)
+                }
             }
         }
-    }
 }
