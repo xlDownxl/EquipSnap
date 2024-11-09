@@ -111,6 +111,104 @@ class APIService {
         task.resume()
     }
     
+    func updateInventoryItem(inventoryID: Int, image: UIImage, x: Float, y: Float, z: Float, completion: @escaping (Bool) -> Void) {
+        // Construct the URL with the inventory ID
+        guard let url = URL(string: "http://granlund.lorenso.nl/admin/inventory-items/\(inventoryID)") else {
+            print("Invalid URL.")
+            completion(false)
+            return
+        }
+
+        // Prepare the image data
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            print("Could not get JPEG representation of UIImage")
+            completion(false)
+            return
+        }
+
+        // Create the URLRequest
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+
+        // Generate boundary string
+        let boundary = UUID().uuidString
+
+        // Set Content-Type in HTTP header
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        // Create the data
+        var body = Data()
+
+        // Add the image data to the raw HTTP request data
+        let filename = "image.jpg"
+        let mimeType = "image/jpeg"
+        body.append("--\(boundary)\r\n")
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n")
+        body.append("Content-Type: \(mimeType)\r\n\r\n")
+        body.append(imageData)
+        body.append("\r\n")
+
+        // Add x, y, z fields
+        let fields: [String: Float] = ["x": x, "y": y, "z": z]
+        for (key, value) in fields {
+            body.append("--\(boundary)\r\n")
+            body.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n")
+            body.append("\(value)\r\n")
+        }
+
+        // Close the body with boundary
+        body.append("--\(boundary)--\r\n")
+
+        request.httpBody = body
+
+        // Send the request
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error updating inventory item: \(error)")
+                completion(false)
+                return
+            }
+
+            // Check response status code
+            if let httpResponse = response as? HTTPURLResponse {
+                if (200...299).contains(httpResponse.statusCode) {
+                    completion(true)
+                } else {
+                    print("Server returned status code \(httpResponse.statusCode)")
+                    completion(false)
+                }
+            } else {
+                print("Invalid response from server")
+                completion(false)
+            }
+            
+            // Access the body of the response
+            if let responseData = data {
+                // For text-based responses
+                if let responseString = String(data: responseData, encoding: .utf8) {
+                    print("Response Body as String:")
+                    print(responseString)
+                }
+                
+                // For JSON responses
+                do {
+                    let jsonObject = try JSONSerialization.jsonObject(with: responseData, options: [])
+                    print("Response Body as JSON Object:")
+                    print(jsonObject)
+                } catch {
+                    print("Error parsing JSON: \(error.localizedDescription)")
+                }
+            } else {
+                print("No data received")
+            }
+        }
+
+        task.resume()
+    }
+                
+               
+    
     func createInventoryItemText(text: String, completion: @escaping (String?, Int?) -> Void) {
             guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/text") else {
                 print("Invalid URL.")
@@ -203,6 +301,72 @@ class APIService {
                 }
             }
 
+            task.resume()
+        }
+    
+    func uploadAudioFile(inventoryID: Int, audioURL: URL, completion: @escaping (String?) -> Void) {
+            guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/\(inventoryID)/audio") else {
+                print("Invalid URL")
+                completion(nil)
+                return
+            }
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            
+            // Set up multipart form data
+            let boundary = UUID().uuidString
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+            
+            // Prepare body
+            var body = Data()
+            
+            // Add audio data to the body
+            body.append("--\(boundary)\r\n")
+            body.append("Content-Disposition: form-data; name=\"audio\"; filename=\"recording.m4a\"\r\n")
+            body.append("Content-Type: audio/m4a\r\n\r\n")
+            
+            do {
+                let audioData = try Data(contentsOf: audioURL)
+                body.append(audioData)
+            } catch {
+                print("Failed to read audio data: \(error)")
+                completion(nil)
+                return
+            }
+            
+            body.append("\r\n--\(boundary)--\r\n")
+            request.httpBody = body
+            
+            // Perform upload
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Error uploading audio: \(error)")
+                    completion(nil)
+                    return
+                }
+                
+                guard let data = data else {
+                    print("No data received")
+                    completion(nil)
+                    return
+                }
+                
+                do {
+                    // Parse the JSON response to get the "message" field
+                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                       let message = json["message"] as? String {
+                        completion(message)
+                    } else {
+                        print("Unexpected JSON format")
+                        completion(nil)
+                    }
+                } catch {
+                    print("Error parsing JSON: \(error.localizedDescription)")
+                    completion(nil)
+                }
+            }
+            
             task.resume()
         }
     
