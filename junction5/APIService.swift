@@ -206,10 +206,10 @@ class APIService {
             task.resume()
         }
     
-    func uploadAudioFile(inventoryID: Int, audioURL: URL, completion: @escaping (Bool) -> Void) {
+    func uploadAudioFile(inventoryID: Int, audioURL: URL, completion: @escaping (String?) -> Void) {
             guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/\(inventoryID)/audio") else {
                 print("Invalid URL")
-                completion(false)
+                completion(nil)
                 return
             }
             
@@ -233,7 +233,7 @@ class APIService {
                 body.append(audioData)
             } catch {
                 print("Failed to read audio data: \(error)")
-                completion(false)
+                completion(nil)
                 return
             }
             
@@ -244,17 +244,29 @@ class APIService {
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
                 if let error = error {
                     print("Error uploading audio: \(error)")
-                    completion(false)
+                    completion(nil)
                     return
                 }
                 
-                guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                    print("Failed to upload audio, server error")
-                    completion(false)
+                guard let data = data else {
+                    print("No data received")
+                    completion(nil)
                     return
                 }
                 
-                completion(true)
+                do {
+                    // Parse the JSON response to get the "message" field
+                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                       let message = json["message"] as? String {
+                        completion(message)
+                    } else {
+                        print("Unexpected JSON format")
+                        completion(nil)
+                    }
+                } catch {
+                    print("Error parsing JSON: \(error.localizedDescription)")
+                    completion(nil)
+                }
             }
             
             task.resume()

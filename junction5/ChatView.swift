@@ -86,64 +86,67 @@ class ChatViewModel: ObservableObject {
     
     
     // Method to start recording audio
-    func startRecording() {
-        let audioSession = AVAudioSession.sharedInstance()
-        
-        do {
-            try audioSession.setCategory(.playAndRecord, mode: .default)
-            try audioSession.setActive(true)
+        func startRecording() {
+            let audioSession = AVAudioSession.sharedInstance()
             
-            // Set the audio file path
-            let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            audioFilename = documentsDirectory.appendingPathComponent("recording.m4a")
-            
-            // Recording settings
-            let settings = [
-                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-                AVSampleRateKey: 12000,
-                AVNumberOfChannelsKey: 1,
-                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-            ]
-            
-            audioRecorder = try AVAudioRecorder(url: audioFilename!, settings: settings)
-            audioRecorder?.prepareToRecord()
-            audioRecorder?.record()
-            
-            isRecording = true
-            print("Recording started")
-        } catch {
-            print("Failed to set up audio session or start recording: \(error)")
-            isRecording = false
-        }
-    }
-    
-    // Method to stop recording audio and upload it
-    func stopRecording() {
-        audioRecorder?.stop()
-        isRecording = false
-        
-        guard let audioURL = audioFilename, let id = inventoryItemId else {
-            print("No audio file or inventory item ID available")
-            return
-        }
-        
-        // Display a message indicating the audio is being sent
-        messages.append(ChatMessage(text: "Sending audio...", isUser: true))
-        
-        // Use APIService to upload the audio file
-        APIService.shared.uploadAudioFile(inventoryID: id, audioURL: audioURL) { [weak self] success in
-            DispatchQueue.main.async {
-                // Remove the "Sending audio..." message
-                self?.messages.removeLast()
+            do {
+                try audioSession.setCategory(.playAndRecord, mode: .default)
+                try audioSession.setActive(true)
                 
-                if success {
-                    self?.messages.append(ChatMessage(text: "Audio message sent", isUser: true))
-                } else {
-                    self?.messages.append(ChatMessage(text: "Failed to send audio message", isUser: true))
+                // Set the audio file path
+                let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                audioFilename = documentsDirectory.appendingPathComponent("recording.m4a")
+                
+                // Recording settings
+                let settings = [
+                    AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                    AVSampleRateKey: 12000,
+                    AVNumberOfChannelsKey: 1,
+                    AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+                ]
+                
+                audioRecorder = try AVAudioRecorder(url: audioFilename!, settings: settings)
+                audioRecorder?.prepareToRecord()
+                audioRecorder?.record()
+                
+                isRecording = true
+                print("Recording started")
+            } catch {
+                print("Failed to set up audio session or start recording: \(error)")
+                isRecording = false
+            }
+        }
+        
+        // Method to stop recording audio and upload it
+        func stopRecording() {
+            audioRecorder?.stop()
+            isRecording = false
+            
+            guard let audioURL = audioFilename, let id = inventoryItemId else {
+                print("No audio file or inventory item ID available")
+                return
+            }
+            
+            // Display a message indicating the audio is being sent
+            messages.append(ChatMessage(text: "Sending audio...", isUser: true))
+            
+            // Use APIService to upload the audio file
+            APIService.shared.uploadAudioFile(inventoryID: id, audioURL: audioURL) { [weak self] responseMessage in
+                DispatchQueue.main.async {
+                    // Remove the "Sending audio..." message
+                    self?.messages.removeLast()
+                    
+                    if let responseText = responseMessage {
+                        self?.messages.append(ChatMessage(text: "Audio message sent", isUser: true))
+                        // Display the API's response message in the chat
+                        self?.messages.append(ChatMessage(text: responseText, isUser: false))
+                    } else {
+                        // If no message is returned, display an error message
+                        self?.messages.append(ChatMessage(text: "Failed to send audio message", isUser: false))
+                    }
                 }
             }
         }
-    }
 }
 
 struct ChatView: View {
