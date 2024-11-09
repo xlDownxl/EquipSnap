@@ -10,10 +10,11 @@ import SceneKit
 import Combine
 
 struct ModelSceneView: UIViewRepresentable {
-    //@Binding var selectedCoordinate: SCNVector3?
+    @State private var showAlert = false
     @ObservedObject var inventoryItemsModel: InventoryItemsModel
 
-    
+    @Binding var showPopup: Bool
+    @Binding var tappedItem: InventoryItem?
     
     func makeUIView(context: Context) -> SCNView {
         // Initialize the SCNView
@@ -54,30 +55,6 @@ struct ModelSceneView: UIViewRepresentable {
         
         sceneView.scene = scene
         
-        // **Create a custom camera node**
-        /*  let cameraNode = SCNNode()
-         cameraNode.camera = SCNCamera()
-         
-         // **Compute the center of the model to set as the target**
-         let (minVec, maxVec) = scene.rootNode.boundingBox
-         let center = SCNVector3(
-         (minVec.x + maxVec.x) / 2,
-         (minVec.y + maxVec.y) / 2,
-         (minVec.z + maxVec.z) / 2
-         )
-         
-         // **Set the camera position**
-         cameraNode.position = SCNVector3(center.x, center.y, center.z + 10) // Adjust z+10 as needed
-         scene.rootNode.addChildNode(cameraNode)
-         
-         // **Set the custom camera as the pointOfView**
-         sceneView.pointOfView = cameraNode
-         
-         // **Set the camera controller's target to the center of the model**
-         sceneView.defaultCameraController.target = center
-         
-         */
-        
         // Add tap gesture recognizer
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(context.coordinator.handleTap(_:)))
         sceneView.addGestureRecognizer(tapGesture)
@@ -87,8 +64,7 @@ struct ModelSceneView: UIViewRepresentable {
         
         // Store sceneView and model in the coordinator
         context.coordinator.sceneView = sceneView
-        //context.coordinator.savedCoordinatesModel = savedCoordinatesModel
-        
+
         // Initial update of red dots
         context.coordinator.updateRedDots()
         
@@ -122,7 +98,6 @@ struct ModelSceneView: UIViewRepresentable {
                 .sink { [weak self] _ in
                     self?.updateRedDots()
                 }
-            //NotificationCenter.default.addObserver(self, selector: #selector(coordinateSaved), name: //NSNotification.Name("CoordinateSaved"), object: nil)
         }
         
         deinit {
@@ -130,19 +105,34 @@ struct ModelSceneView: UIViewRepresentable {
         }
 
         
-        
         @objc func handleTap(_ gestureRecognize: UIGestureRecognizer) {
             guard let sceneView = sceneView else { return }
             let touchLocation = gestureRecognize.location(in: sceneView)
-            let hitResults = sceneView.hitTest(touchLocation, options: [:])
-            if let hit = hitResults.first {
+            let hitResults = sceneView.hitTest(touchLocation, options: nil)
+            
+            if let hit = hitResults.first, let nodeName = hit.node.name {
+                
                 let position = hit.worldCoordinates
                 print("Touched position: \(position)")
+                
 
-                // Present the alert
-                presentAlert(at: position)
+                if let tappedItem = parent.inventoryItemsModel.items.first(where: { $0.id == Int(nodeName)}) {
+                    print("ITEM TOUCHED''''")
+                    print(tappedItem.equipment_type)
+                    DispatchQueue.main.async {
+                        // Set the tapped item to trigger the popup display in SwiftUI
+                        self.parent.tappedItem = tappedItem
+                        self.parent.showPopup = true
+                    }
+                }else{
+                    presentAlert(at: position)
+                }
             } else {
-                print("No hit detected")
+                if let hit = hitResults.first{
+                    let position = hit.worldCoordinates
+                    // Present the alert
+                    presentAlert(at: position)
+                }
             }
         }
         
@@ -199,20 +189,23 @@ struct ModelSceneView: UIViewRepresentable {
             
             // Remove existing red dots
             scene.rootNode.enumerateChildNodes { (node, _) in
-                if node.name == "RedDot" {
-                    node.removeFromParentNode()
-                }
+                if let nodeId = Int(node.name ?? "") {
+                        // Check if any item in the list has a matching id
+                        if parent.inventoryItemsModel.items.contains(where: { $0.id == nodeId }) {
+                            node.removeFromParentNode()
+                        }
+                    }
             }
             
             // Add red dots for inventory items
             for item in parent.inventoryItemsModel.items {
-                let sphere = SCNSphere(radius: 0.3)
+                let sphere = SCNSphere(radius: 1.3)
                 sphere.firstMaterial?.diffuse.contents = UIColor.red
                 let node = SCNNode(geometry: sphere)
                 node.position = SCNVector3(item.x, item.y, item.z)
-                node.name = "RedDot"
+                //node.name = "RedDot"
                 // Use equipment_type as node's name
-                node.name = item.equipment_type
+                node.name = String(item.id)
                 scene.rootNode.addChildNode(node)
             }
         }
