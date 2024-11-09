@@ -19,9 +19,6 @@ struct ModelSceneView: UIViewRepresentable {
         let sceneView = SCNView()
         sceneView.allowsCameraControl = true // Enable user interaction
         //sceneView.backgroundColor = UIColor.gray // Set background color
-
-        
-        
         
         // Load the USDZ model
         guard let scene = SCNScene(named: "building_meters.usdz") else {

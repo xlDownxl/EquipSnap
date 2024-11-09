@@ -9,9 +9,15 @@ import SwiftUI
 
 @main
 struct junction5App: App {
+    @StateObject var inventoryItemsModel = InventoryItemsModel()
+    
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView() .environmentObject(inventoryItemsModel)
+                .onAppear {
+                    inventoryItemsModel.startFetching()
+                }
         }
     }
 }
