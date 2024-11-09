@@ -126,32 +126,52 @@ class ChatViewModel: ObservableObject {
         }
     }
     
-    // Method to stop recording audio and upload it
     func stopRecording() {
         audioRecorder?.stop()
         isRecording = false
         
-        guard let audioURL = audioFilename, let id = inventoryItemId else {
-            print("No audio file or inventory item ID available")
+        guard let audioURL = audioFilename else {
+            print("No audio file available")
             return
         }
         
         // Display a message indicating the audio is being sent
         messages.append(ChatMessage(text: "Sending audio...", isUser: true))
         
-        // Use APIService to upload the audio file
-        APIService.shared.uploadAudioFile(inventoryID: id, audioURL: audioURL) { [weak self] responseMessage in
-            DispatchQueue.main.async {
-                // Remove the "Sending audio..." message
-                self?.messages.removeLast()
-                
-                if let responseText = responseMessage {
-                    self?.messages.append(ChatMessage(text: "Audio message sent", isUser: true))
-                    // Display the API's response message in the chat
-                    self?.messages.append(ChatMessage(text: responseText, isUser: false))
-                } else {
-                    // If no message is returned, display an error message
-                    self?.messages.append(ChatMessage(text: "Failed to send audio message", isUser: false))
+        if let id = inventoryItemId {
+            // If inventory item ID exists, update the existing inventory item with audio
+            APIService.shared.uploadAudioFile(inventoryID: id, audioURL: audioURL) { [weak self] responseMessage in
+                DispatchQueue.main.async {
+                    // Remove the "Sending audio..." message
+                    self?.messages.removeLast()
+                    messages.append(ChatMessage(text: "Audio sent", isUser: true))
+                    
+                    if let responseText = responseMessage {
+                        self?.messages.append(ChatMessage(text: "Audio message sent", isUser: true))
+                        // Display the API's response message in the chat
+                        self?.messages.append(ChatMessage(text: responseText, isUser: false))
+                    } else {
+                        // If no message is returned, display an error message
+                        self?.messages.append(ChatMessage(text: "Failed to send audio message", isUser: false))
+                    }
+                }
+            }
+        } else {
+            // If no inventory item ID, create a new inventory item with audio
+            APIService.shared.createInventoryItemWithAudio(audioURL: audioURL) { [weak self] responseMessage, newInventoryID in
+                DispatchQueue.main.async {
+                    // Remove the "Sending audio..." message
+                    self?.messages.removeLast()
+                    messages.append(ChatMessage(text: "Audio sent", isUser: true))
+                    
+                    if let responseText = responseMessage {
+                        self?.messages.append(ChatMessage(text: responseText, isUser: false))
+                        // Store the newly created inventory item ID for future updates
+                        self?.inventoryItemId = newInventoryID
+                    } else {
+                        // If no message is returned, display an error message
+                        self?.messages.append(ChatMessage(text: "Failed to create inventory item with audio.", isUser: false))
+                    }
                 }
             }
         }

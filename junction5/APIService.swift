@@ -242,6 +242,79 @@ class APIService {
             task.resume()
         }
     
+    func createInventoryItemWithAudio(audioURL: URL, completion: @escaping (String?, Int?) -> Void) {
+        guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/audio") else {
+            print("Invalid URL")
+            completion("Invalid URL.", nil)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        // Set up multipart form data
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        // Prepare body
+        var body = Data()
+        
+        // Add audio data to the body
+        body.append("--\(boundary)\r\n")
+        body.append("Content-Disposition: form-data; name=\"audio\"; filename=\"recording.m4a\"\r\n")
+        body.append("Content-Type: audio/m4a\r\n\r\n")
+        
+        do {
+            let audioData = try Data(contentsOf: audioURL)
+            body.append(audioData)
+        } catch {
+            print("Failed to read audio data: \(error)")
+            completion("Failed to read audio data.", nil)
+            return
+        }
+        
+        body.append("\r\n--\(boundary)--\r\n")
+        request.httpBody = body
+        
+        // Perform upload
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error uploading audio: \(error)")
+                completion("Failed to upload audio.", nil)
+                return
+            }
+            
+            guard let responseData = data else {
+                print("No data received")
+                completion("No response from server.", nil)
+                return
+            }
+            
+            do {
+                // Parse the JSON response to get the "message" and "inventory" fields
+                if let json = try JSONSerialization.jsonObject(with: responseData, options: []) as? [String: Any] {
+                    let message = json["message"] as? String
+                    
+                    // Cast "inventory" to a dictionary before accessing "id"
+                    if let inventory = json["inventory"] as? [String: Any],
+                       let inventoryID = inventory["id"] as? Int {
+                        completion(message, inventoryID)
+                    } else {
+                        completion(message, nil)
+                    }
+                } else {
+                    print("Unexpected JSON format")
+                    completion("Invalid server response.", nil)
+                }
+            } catch {
+                print("Error parsing JSON: \(error.localizedDescription)")
+                completion("Failed to parse server response.", nil)
+            }
+        }
+        
+        task.resume()
+    }
+    
     func uploadAudioFile(inventoryID: Int, audioURL: URL, completion: @escaping (String?) -> Void) {
             guard let url = URL(string: "http://granlund.lorenso.nl/api/inventory/\(inventoryID)/audio") else {
                 print("Invalid URL")
