@@ -60,14 +60,14 @@ struct ModelViewWrapper: View {
                         }.navigationTitle("Details")
                         
                     }
-                    .frame(width: 225, height: 250)
+                    .frame(width: 230, height: 260)
                     .background(Color.white)
-                    .cornerRadius(10)
-                    .shadow(radius: 5)
+                    //.cornerRadius(10)
+                   /* .shadow(radius: 5)
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
                             .stroke(Color.gray, lineWidth: 1)
-                    )
+                    )*/
                     .transition(.scale)
                 }
                 

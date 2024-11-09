@@ -23,7 +23,7 @@ struct ModelSceneView: UIViewRepresentable {
         sceneView.backgroundColor = UIColor.white // Set background color
         
         // Load the USDZ model
-        guard let scene = SCNScene(named: "building_meters.usdz") else {
+        guard let scene = SCNScene(named: "second_model.usdz") else {
             print("Failed to load the model")
             return sceneView
         }
@@ -53,17 +53,17 @@ struct ModelSceneView: UIViewRepresentable {
         directionalLightNode.eulerAngles = SCNVector3Make(-.pi / 3, 0, 0)
         scene.rootNode.addChildNode(directionalLightNode)
         
-        let cameraNode = SCNNode()
+     /*   let cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
         // Position the camera above the model
-        cameraNode.position = SCNVector3(x: 0, y: 300, z: 0)
+        cameraNode.position = SCNVector3(x: 0, y: 6, z: 0)
         // Rotate the camera to look down at the model
-        cameraNode.eulerAngles = SCNVector3(-Float.pi / 2, 0, 0)
+        cameraNode.eulerAngles = SCNVector3(0, 0, 0)
         cameraNode.camera?.zFar = 1000
         // Add the camera node to the scene
         scene.rootNode.addChildNode(cameraNode)
         // Set the camera as the point of view
-        sceneView.pointOfView = cameraNode
+        sceneView.pointOfView = cameraNode*/
         
         // Set default material properties
         scene.rootNode.enumerateChildNodes { (node, _) in
@@ -241,7 +241,7 @@ struct ModelSceneView: UIViewRepresentable {
                 if item.x==0 && item.y==0.0 && item.z==0{
                     continue
                 }
-                let sphere = SCNSphere(radius: 1.3)
+                let sphere = SCNSphere(radius: 0.4)
                 sphere.firstMaterial?.diffuse.contents = UIColor.red
                 let node = SCNNode(geometry: sphere)
                 node.position = SCNVector3(item.x, item.y, item.z)
