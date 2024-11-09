@@ -20,7 +20,7 @@ struct ModelSceneView: UIViewRepresentable {
         // Initialize the SCNView
         let sceneView = SCNView()
         sceneView.allowsCameraControl = true // Enable user interaction
-        //sceneView.backgroundColor = UIColor.gray // Set background color
+        sceneView.backgroundColor = UIColor.white // Set background color
         
         // Load the USDZ model
         guard let scene = SCNScene(named: "building_meters.usdz") else {
@@ -64,6 +64,23 @@ struct ModelSceneView: UIViewRepresentable {
         scene.rootNode.addChildNode(cameraNode)
         // Set the camera as the point of view
         sceneView.pointOfView = cameraNode
+        
+        // Set default material properties
+        scene.rootNode.enumerateChildNodes { (node, _) in
+            if let geometry = node.geometry {
+                for material in geometry.materials {
+                    // Set diffuse color
+                    material.diffuse.contents = UIColor.lightGray
+                    // Optionally set specular, ambient, and other properties
+                    material.specular.contents = UIColor.white
+                    material.emission.contents = UIColor.black
+                    material.ambient.contents = UIColor.darkGray
+                    // Ensure materials are double-sided
+                    material.isDoubleSided = true
+                }
+            }
+        }
+
         
         sceneView.scene = scene
         
