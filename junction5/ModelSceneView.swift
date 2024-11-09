@@ -53,6 +53,18 @@ struct ModelSceneView: UIViewRepresentable {
         directionalLightNode.eulerAngles = SCNVector3Make(-.pi / 3, 0, 0)
         scene.rootNode.addChildNode(directionalLightNode)
         
+        let cameraNode = SCNNode()
+        cameraNode.camera = SCNCamera()
+        // Position the camera above the model
+        cameraNode.position = SCNVector3(x: 0, y: 300, z: 0)
+        // Rotate the camera to look down at the model
+        cameraNode.eulerAngles = SCNVector3(-Float.pi / 2, 0, 0)
+        cameraNode.camera?.zFar = 1000
+        // Add the camera node to the scene
+        scene.rootNode.addChildNode(cameraNode)
+        // Set the camera as the point of view
+        sceneView.pointOfView = cameraNode
+        
         sceneView.scene = scene
         
         // Add tap gesture recognizer
@@ -200,15 +212,18 @@ struct ModelSceneView: UIViewRepresentable {
             // Remove existing red dots
             scene.rootNode.enumerateChildNodes { (node, _) in
                 if let nodeId = Int(node.name ?? "") {
-                        // Check if any item in the list has a matching id
-                        if parent.inventoryItemsModel.items.contains(where: { $0.id == nodeId }) {
-                            node.removeFromParentNode()
-                        }
+                    // Check if any item in the list has a matching id
+                    if parent.inventoryItemsModel.items.contains(where: { $0.id == nodeId }) {
+                        node.removeFromParentNode()
                     }
+                }
             }
             
             // Add red dots for inventory items
             for item in parent.inventoryItemsModel.items {
+                if item.x==0 && item.y==0.0 && item.z==0{
+                    continue
+                }
                 let sphere = SCNSphere(radius: 1.3)
                 sphere.firstMaterial?.diffuse.contents = UIColor.red
                 let node = SCNNode(geometry: sphere)

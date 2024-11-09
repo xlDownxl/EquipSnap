@@ -185,9 +185,9 @@ class ChatViewModel: ObservableObject {
         
         if let id = inventoryItemId {
             // Update existing inventory item
-            var xPosition: Float { position?.x ?? -500}
-            var yPosition: Float {  position?.y ?? -500}
-            var zPosition: Float {position?.z ?? -500}
+            var xPosition: Float { position?.x ?? 0}
+            var yPosition: Float {  position?.y ?? 0}
+            var zPosition: Float {position?.z ?? 0}
             APIService.shared.updateInventoryItem(inventoryID: id, image: image, x: xPosition, y: yPosition, z: zPosition) { [weak self] responseMessage in
                 DispatchQueue.main.async {
                     self?.messages.removeLast()
@@ -201,9 +201,9 @@ class ChatViewModel: ObservableObject {
             }
         } else {
             // Create new inventory item
-            var xPosition: Float { position?.x ?? -500}
-            var yPosition: Float {  position?.y ?? -500}
-            var zPosition: Float {position?.z ?? -500}
+            var xPosition: Float { position?.x ?? 0}
+            var yPosition: Float {  position?.y ?? 0}
+            var zPosition: Float {position?.z ?? 0}
             APIService.shared.uploadInventoryItem(image: image, x: xPosition, y: yPosition, z: zPosition) { [weak self] responseMessage, newInventoryID in
                 DispatchQueue.main.async {
                     self?.messages.removeLast()
