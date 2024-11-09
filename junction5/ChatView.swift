@@ -144,7 +144,7 @@ class ChatViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     // Remove the "Sending audio..." message
                     self?.messages.removeLast()
-                    messages.append(ChatMessage(text: "Audio sent", isUser: true))
+                    self?.messages.append(ChatMessage(text: "Audio sent", isUser: true))
                     
                     if let responseText = responseMessage {
                         self?.messages.append(ChatMessage(text: "Audio message sent", isUser: true))
@@ -162,7 +162,7 @@ class ChatViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     // Remove the "Sending audio..." message
                     self?.messages.removeLast()
-                    messages.append(ChatMessage(text: "Audio sent", isUser: true))
+                    self?.messages.append(ChatMessage(text: "Audio sent", isUser: true))
                     
                     if let responseText = responseMessage {
                         self?.messages.append(ChatMessage(text: responseText, isUser: false))
