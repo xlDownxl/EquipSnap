@@ -102,7 +102,7 @@ struct InventoryRow: View {
         HStack {
             // Display image if available, else show placeholder
             if let imagePath = item.image,
-               let imageURL = URL(string: "http://granlund.lorenso.nl/storage/" + imagePath) {
+               let imageURL = URL(string: imagePath) {
                 AsyncImage(url: imageURL) { phase in
                     switch phase {
                     case .empty:
